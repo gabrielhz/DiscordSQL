@@ -1,5 +1,7 @@
 import discord
 from discord import app_commands
+from dbconnector import connectdb
+
 
 id_do_servidor = 510242958113505290  # Coloque aqui o ID do seu servidor
 
@@ -23,7 +25,16 @@ aclient = client()
 tree = app_commands.CommandTree(aclient)
 
 
+@tree.command(guild=discord.Object(id=id_do_servidor), name='updatedatabase', description='Atualiza os dados selecionados no banco de dados')
+async def updatedatabase(interaction: discord.Interaction, host: str, database: str, user: str, password: str):
+
+    await interaction.response.send_message(f"mensagens: {host} {database} {user} {password}")
+
+    connectdb(host, database, user, password)
+
 # Comando específico para seu servidor
+
+
 @tree.command(guild=discord.Object(id=id_do_servidor), name='teste', description='Testando')
 async def slash2(interaction: discord.Interaction):
     await interaction.response.send_message(f"Estou funcionando!", ephemeral=True)
