@@ -1,15 +1,16 @@
+import configparser
 import mysql.connector
 from mysql.connector import Error
 
-localhost = 'localhost'
-esmeralda = 'esmeralda'
-root = 'root'
-password = ''
+# localhost = 'localhost'
+# esmeralda = 'esmeralda'
+# root = 'root'
+# password = ''
 
-player_id = '1100001027c307f'
-table_id = 'summerz_accounts'
-row_id = 'whitelist'
-new_value = '0'
+# player_id = '1100001027c307f'
+# table_id = 'summerz_accounts'
+# row_id = 'whitelist'
+# new_value = '0'
 
 
 def connectdb(host, database, user, password):
@@ -42,6 +43,36 @@ def connectdb(host, database, user, password):
         print("Error while connecting to MySQL", e)
 
 
+def list_tables(host, database, user, password):
+    try:
+        # host = input("Database IP:")  # use localhost for localhosted
+        # database = input("Database:")
+        # user = input("Username:")  # use root for root
+        # password = input("Password:")
+        global connection
+        # global cursor
+
+        connection = mysql.connector.connect(host=host,
+                                             database=database,
+                                             user=user,
+                                             password=password)
+
+        if connection.is_connected():
+            db_Info = connection.get_server_info()
+            print("Connected to MySQL Server version ", db_Info)
+            cursor = connection.cursor()
+            cursor.execute("select database();")
+            record = cursor.fetchone()
+            print("You're connected to database: ", record)
+            print("avaliable tables to work on:")
+            cursor.execute("show tables;")
+            record = cursor.fetchall()
+            return (record)
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+
+
 def disconnectdb():
     if connection.is_connected():
         cursor = connection.cursor()
@@ -50,7 +81,7 @@ def disconnectdb():
         print("MySQL connection is closed")
 
 
-def updatedb(playerid, tableid, row, newvalue):
+def updatedb(tableid, playerid, row, newvalue):
 
     cursor = connection.cursor()
 
@@ -74,8 +105,18 @@ def updatedb(playerid, tableid, row, newvalue):
     print(record)
 
 
-connectdb(localhost, esmeralda, root, password)
+def cfg_save(arquivo, host, database, user, password):
+    with open(arquivo, 'w') as f:
+        f.write("[DATA]\n")
+        f.write(f"host = {host}\n")
+        f.write(f"database = {database}\n")
+        f.write(f"user = {user}\n")
+        f.write(f"password = {password}\n")
 
-updatedb(player_id, table_id, row_id, new_value)
 
-disconnectdb()
+def cfg_read(arg):
+    config = configparser.RawConfigParser()
+    config.read('db.cfg')
+    details = dict(config.items('DATA'))
+   # print(f'returned: {details[arg]}')
+    return details[arg]
