@@ -915,7 +915,6 @@ class DiscordVoiceWebSocket:
             'd': {
                 'speaking': int(state),
                 'delay': 0,
-                'ssrc': self._connection.ssrc,
             },
         }
 
@@ -991,11 +990,7 @@ class DiscordVoiceWebSocket:
     async def load_secret_key(self, data: Dict[str, Any]) -> None:
         _log.debug('received secret key for voice connection')
         self.secret_key = self._connection.secret_key = data['secret_key']
-
-        # Send a speak command with the "not speaking" state.
-        # This also tells Discord our SSRC value, which Discord requires
-        # before sending any voice data (and is the real reason why we
-        # call this here).
+        await self.speak()
         await self.speak(SpeakingState.none)
 
     async def poll_event(self) -> None:

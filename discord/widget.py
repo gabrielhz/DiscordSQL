@@ -226,7 +226,7 @@ class Widget:
         The guild's name.
     channels: List[:class:`WidgetChannel`]
         The accessible voice channels in the guild.
-    members: List[:class:`WidgetMember`]
+    members: List[:class:`Member`]
         The online members in the guild. Offline members
         do not appear in the widget.
 

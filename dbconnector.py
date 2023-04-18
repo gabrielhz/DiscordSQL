@@ -73,6 +73,35 @@ def list_tables(host, database, user, password):
         print("Error while connecting to MySQL", e)
 
 
+def list_rows(host, database, user, password, tableid):
+    try:
+
+        global connection
+        # global cursor
+
+        connection = mysql.connector.connect(host=host,
+                                             database=database,
+                                             user=user,
+                                             password=password)
+
+        if connection.is_connected():
+            db_Info = connection.get_server_info()
+            print("Connected to MySQL Server version ", db_Info)
+            cursor = connection.cursor()
+            cursor.execute("select database();")
+            record = cursor.fetchone()
+            print("You're connected to database: ", record)
+            print("avaliable rows to work on:")
+            # cursor.execute(f"show columns from {tableid};")
+            cursor.execute(
+                f"select column_name from information_schema.columns where table_schema = '{database}' and table_name = '{tableid}';")
+            record = cursor.fetchall()
+            return (record)
+
+    except Error as e:
+        print("Error while connecting to MySQL", e)
+
+
 def disconnectdb():
     if connection.is_connected():
         cursor = connection.cursor()
