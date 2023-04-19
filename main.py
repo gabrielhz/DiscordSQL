@@ -1,5 +1,6 @@
 import discord
 import dbconnector
+import api
 from discord import app_commands
 
 id_do_servidor = 510242958113505290  # Coloque aqui o ID do seu servidor
@@ -26,7 +27,6 @@ tree = app_commands.CommandTree(aclient)
 
 @tree.command(guild=discord.Object(id=id_do_servidor), name='setdatabase', description='Atualiza os dados do banco de dados')
 async def setdatabase(interaction: discord.Interaction, host: str, database: str, user: str, password: str):
-    # await interaction.response.send_message(f"mensagens: {host} {database} {user} {password}")
     dbconnector.cfg_save(
         'db.cfg', f"{host}", f"{database}", f"{user}", "")
     await interaction.response.send_message(dbconnector.list_tables(dbconnector.cfg_read('host'), dbconnector.cfg_read('database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password')), ephemeral=True)
@@ -38,9 +38,9 @@ async def tables(interaction: discord.Interaction):
     dbconnector.disconnectdb()
 
 
-@tree.command(guild=discord.Object(id=id_do_servidor), name='rows', description='Colunas disponíveis')
+@tree.command(guild=discord.Object(id=id_do_servidor), name='columns', description='Colunas disponíveis')
 async def tables(interaction: discord.Interaction, tableid: str,):
-    await interaction.response.send_message(dbconnector.list_rows(dbconnector.cfg_read('host'), dbconnector.cfg_read('database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password'), tableid), ephemeral=True)
+    await interaction.response.send_message(dbconnector.list_columns(dbconnector.cfg_read('host'), dbconnector.cfg_read('database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password'), tableid), ephemeral=True)
     dbconnector.disconnectdb()
 
 
@@ -53,5 +53,48 @@ async def updatedatabase(interaction: discord.Interaction, tableid: str, steamid
     await interaction.response.send_message(f"On database {dbconnector.cfg_read('database')} \ntable: {tableid} \nupdated {row} row on steamid {steamid} to {newvalue}", ephemeral=True)
 
 
+@tree.command(guild=discord.Object(id=id_do_servidor), name='rows', description='Campos no banco de dados')
+async def rows(interaction: discord.Interaction, tableid: str):
+    rows = dbconnector.list_rows(tableid, dbconnector.cfg_read('host'), dbconnector.cfg_read(
+        'database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password'))
+
+    embed = discord.Embed(title=f"{tableid}",
+                          description="", colour=discord.Colour.purple())
+    embed.set_author(name="discord.sql")
+    embed.set_thumbnail(
+        url="https://cdn.discordapp.com/attachments/981184461322465290/1098046630411911178/discordsqlbanner.png")
+    embed.set_footer(text=api.get_latest_version())
+    i = 0
+    while i < len(rows):
+        key = list(rows.keys())[i]
+        values = rows[key]
+        values_str = ', '.join(str(v) for v in values)
+        embed.add_field(name=f"{key}", value=f"{values_str}")
+        i = i + 1
+
+    await interaction.response.send_message(embed=embed)
+
+
+@tree.command(guild=discord.Object(id=id_do_servidor), name='row', description='Campos no banco de dados')
+async def row(interaction: discord.Interaction, tableid: str, steamid: str):
+    row = dbconnector.list_unique_rows(tableid, steamid, dbconnector.cfg_read('host'), dbconnector.cfg_read(
+        'database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password'))
+
+    embed = discord.Embed(title=f"{tableid}",
+                          description="", colour=discord.Colour.purple())
+    embed.set_author(name="discord.sql")
+    embed.set_thumbnail(
+        url="https://cdn.discordapp.com/attachments/981184461322465290/1098046630411911178/discordsqlbanner.png")
+    embed.set_footer(text=api.get_latest_version())
+    i = 0
+    while i < len(row):
+        key = list(row.keys())[i]
+        value = row[key]
+        value_str = ', '.join(str(v) for v in value)
+        embed.add_field(name=f"{key}", value=f"{value_str}")
+        i = i + 1
+
+    await interaction.response.send_message(embed=embed)
+
 aclient.run(
-    'MTA5MDEyMjY4MDA5Njc5NjczNw.GBugHa.3cn_7L-8QLaJJKlMc4QgLQPjDbul0vpmhiC0Tw')
+    'MTA5MDEyMjY4MDA5Njc5NjczNw.Gw_TYC.ALOQoW9J_Mg66oyPqwR_NXFLBUunlPSwciZmS4')

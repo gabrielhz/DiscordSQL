@@ -1,6 +1,7 @@
 import configparser
 import mysql.connector
 from mysql.connector import Error
+from collections import defaultdict
 
 # localhost = 'localhost'
 # esmeralda = 'esmeralda'
@@ -43,6 +44,41 @@ def connectdb(host, database, user, password):
         print("Error while connecting to MySQL", e)
 
 
+def disconnectdb():
+    if connection.is_connected():
+        cursor = connection.cursor()
+        cursor.close()
+        connection.close()
+        print("MySQL connection is closed")
+
+
+def list_rows(table, host, database, user, password):
+    connectdb(host, database, user, password)
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute(f"select * from {table} limit 1000;")
+    records = cursor.fetchall()
+    disconnectdb()
+    output = defaultdict(list)
+    for record in records:
+        for key, value in record.items():
+            output[key].append(value)
+    return (output)
+
+
+def list_unique_rows(table, playerid, host, database, user, password):
+    connectdb(host, database, user, password)
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute(
+        f"select * from {table} where steam = '{playerid}'")
+    records = cursor.fetchall()
+    disconnectdb()
+    output = defaultdict(list)
+    for record in records:
+        for key, value in record.items():
+            output[key].append(value)
+    return (output)
+
+
 def list_tables(host, database, user, password):
     try:
         # host = input("Database IP:")  # use localhost for localhosted
@@ -67,13 +103,13 @@ def list_tables(host, database, user, password):
             print("avaliable tables to work on:")
             cursor.execute("show tables;")
             record = cursor.fetchall()
-            return (record)
+            return record
 
     except Error as e:
         print("Error while connecting to MySQL", e)
 
 
-def list_rows(host, database, user, password, tableid):
+def list_columns(host, database, user, password, tableid):
     try:
 
         global connection
@@ -91,23 +127,15 @@ def list_rows(host, database, user, password, tableid):
             cursor.execute("select database();")
             record = cursor.fetchone()
             print("You're connected to database: ", record)
-            print("avaliable rows to work on:")
+            print("avaliable columns to work on:")
             # cursor.execute(f"show columns from {tableid};")
             cursor.execute(
                 f"select column_name from information_schema.columns where table_schema = '{database}' and table_name = '{tableid}';")
             record = cursor.fetchall()
-            return (record)
+            return record
 
     except Error as e:
         print("Error while connecting to MySQL", e)
-
-
-def disconnectdb():
-    if connection.is_connected():
-        cursor = connection.cursor()
-        cursor.close()
-        connection.close()
-        print("MySQL connection is closed")
 
 
 def updatedb(tableid, playerid, row, newvalue):
