@@ -2,6 +2,21 @@ import configparser
 import mysql.connector
 from mysql.connector import Error
 from collections import defaultdict
+import mysql.connector.cursor_cext
+from mysql.connector.cursor_cext import CMySQLCursorBuffered, List, RowType
+
+
+def fetchall(self) -> List[RowType]:
+    try:
+        self._check_executed()
+        res = self._rows[self._next_row:]
+        self._next_row = len(self._rows)
+        return res
+    except:
+        return 0
+
+
+CMySQLCursorBuffered.fetchall = fetchall
 
 # localhost = 'localhost'
 # esmeralda = 'esmeralda'
@@ -35,10 +50,10 @@ def connectdb(host, database, user, password):
             cursor.execute("select database();")
             record = cursor.fetchone()
             print("You're connected to database: ", record)
-            print("avaliable tables to work on:")
-            cursor.execute("show tables;")
-            record = cursor.fetchall()
-            print(record)
+            # print("avaliable tables to work on:")
+            # cursor.execute("show tables;")
+            # record = cursor.fetchall()
+            # print(record)
 
     except Error as e:
         print("Error while connecting to MySQL", e)
@@ -65,6 +80,23 @@ def list_rows(table, host, database, user, password):
     return (output)
 
 
+def run_command(command, host, database, user, password):
+    try:
+        connectdb(host, database, user, password)
+        cursor = connection.cursor(buffered=True)
+        sql_command = f"{command}"
+        cursor.execute(sql_command)
+        connection.commit()
+        records = cursor.fetchall()
+        disconnectdb()
+        if records != 0:
+            return sql_command, records
+        else:
+            return sql_command, "Command executed sucessfully "
+    except mysql.connector.Error as err:
+        return sql_command, ("Something went wrong: {}".format(err))
+
+
 def list_unique_rows(table, playerid, host, database, user, password):
     connectdb(host, database, user, password)
     cursor = connection.cursor(dictionary=True)
@@ -76,7 +108,7 @@ def list_unique_rows(table, playerid, host, database, user, password):
     for record in records:
         for key, value in record.items():
             output[key].append(value)
-    return (output)
+    return output
 
 
 def list_tables(host, database, user, password):

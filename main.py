@@ -96,5 +96,23 @@ async def row(interaction: discord.Interaction, tableid: str, steamid: str):
 
     await interaction.response.send_message(embed=embed)
 
+
+@tree.command(guild=discord.Object(id=id_do_servidor), name='sqlcommand', description='Campos no banco de dados')
+async def sqlcommand(interaction: discord.Interaction, command: str):
+    row = dbconnector.run_command(command, dbconnector.cfg_read('host'), dbconnector.cfg_read(
+        'database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password'))
+
+    embed = discord.Embed(title=f"{row[0]}",
+                          description="", colour=discord.Colour.purple())
+    embed.set_author(name="discord.sql")
+    embed.set_thumbnail(
+        url="https://cdn.discordapp.com/attachments/981184461322465290/1098046630411911178/discordsqlbanner.png")
+    embed.set_footer(text=api.get_latest_version())
+
+    embed.add_field(name=f"Command return:", value=f"{row[1]}")
+
+    await interaction.response.send_message(embed=embed)
+
+
 aclient.run(
     'MTA5MDEyMjY4MDA5Njc5NjczNw.Gw_TYC.ALOQoW9J_Mg66oyPqwR_NXFLBUunlPSwciZmS4')
