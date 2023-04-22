@@ -27,36 +27,109 @@ tree = app_commands.CommandTree(aclient)
 
 @tree.command(guild=discord.Object(id=id_do_servidor), name='setdatabase', description='Atualiza os dados do banco de dados')
 async def setdatabase(interaction: discord.Interaction, host: str, database: str, user: str, password: str):
-    dbconnector.cfg_save(
-        'db.cfg', f"{host}", f"{database}", f"{user}", "")
-    await interaction.response.send_message(dbconnector.list_tables(dbconnector.cfg_read('host'), dbconnector.cfg_read('database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password')), ephemeral=True)
+
+    storing = dbconnector.storedb(
+        f"{host}", f"{database}", f"{user}", f"")
+
+    if storing[0] == True:
+
+        tables = dbconnector.list_tables(
+            dbconnector.host, dbconnector.database, dbconnector.user, dbconnector.password)
+
+        embed = discord.Embed(title=f"Sucessful connection try at {host} {database} using {user} user.",
+                              description=f"Connection info stored", colour=discord.Colour.purple())
+        embed.set_author(name="discord.sql")
+        embed.set_thumbnail(
+            url="https://cdn.discordapp.com/attachments/981184461322465290/1098046630411911178/discordsqlbanner.png")
+        embed.set_footer(text=api.get_latest_version())
+        i = 0
+        while i < len(tables):
+            value = tables[i]
+            embed.add_field(name=f"{value}", value=f"")
+            i = i + 1
+
+        await interaction.response.send_message(embed=embed)
+    else:
+        embed = discord.Embed(
+            title=f"Failed connection try at {host} {database} using {user} user.", description=f"{storing[1]}", colour=discord.Colour.purple())
+        embed.set_author(name="discord.sql")
+        embed.set_thumbnail(
+            url="https://cdn.discordapp.com/attachments/981184461322465290/1098046630411911178/discordsqlbanner.png")
+        embed.set_footer(text=api.get_latest_version())
+        await interaction.response.send_message(embed=embed)
 
 
 @tree.command(guild=discord.Object(id=id_do_servidor), name='tables', description='Tabelas disponíveis')
 async def tables(interaction: discord.Interaction):
-    await interaction.response.send_message(dbconnector.list_tables(dbconnector.cfg_read('host'), dbconnector.cfg_read('database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password')), ephemeral=True)
-    dbconnector.disconnectdb()
+
+    tables = dbconnector.list_tables(
+        dbconnector.host, dbconnector.database, dbconnector.user, dbconnector.password)
+
+    embed = discord.Embed(title=f"{dbconnector.database} tables",
+                          description="", colour=discord.Colour.purple())
+    embed.set_author(name="discord.sql")
+    embed.set_thumbnail(
+        url="https://cdn.discordapp.com/attachments/981184461322465290/1098046630411911178/discordsqlbanner.png")
+    embed.set_footer(text=api.get_latest_version())
+    i = 0
+    while i < len(tables):
+        value = tables[i]
+        embed.add_field(name=f"{value}", value=f"")
+        i = i + 1
+
+    await interaction.response.send_message(embed=embed)
 
 
 @tree.command(guild=discord.Object(id=id_do_servidor), name='columns', description='Colunas disponíveis')
 async def tables(interaction: discord.Interaction, tableid: str,):
-    await interaction.response.send_message(dbconnector.list_columns(dbconnector.cfg_read('host'), dbconnector.cfg_read('database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password'), tableid), ephemeral=True)
-    dbconnector.disconnectdb()
+
+    columns = dbconnector.list_columns(
+        tableid, dbconnector.host, dbconnector.database, dbconnector.user, dbconnector.password)
+
+    embed = discord.Embed(title=f"{tableid} columns",
+                          description="", colour=discord.Colour.purple())
+    embed.set_author(name="discord.sql")
+    embed.set_thumbnail(
+        url="https://cdn.discordapp.com/attachments/981184461322465290/1098046630411911178/discordsqlbanner.png")
+    embed.set_footer(text=api.get_latest_version())
+    i = 0
+    while i < len(columns):
+        value = columns[i]
+        embed.add_field(name=f"{value}", value=f"")
+        i = i + 1
+
+    await interaction.response.send_message(embed=embed)
+
+    # await interaction.response.send_message(dbconnector.list_columns(dbconnector.host, dbconnector.database, dbconnector.user, dbconnector.password, tableid), ephemeral=True)
 
 
 @tree.command(guild=discord.Object(id=id_do_servidor), name='updatedatabase', description='Modifica os dados da tabela selecionada')
 async def updatedatabase(interaction: discord.Interaction, tableid: str, steamid: str, row: str, newvalue: str):
-    dbconnector.connectdb(dbconnector.cfg_read('host'), dbconnector.cfg_read(
-        'database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password'))
-    dbconnector.updatedb(tableid, steamid, row, newvalue)
-    dbconnector.disconnectdb()
-    await interaction.response.send_message(f"On database {dbconnector.cfg_read('database')} \ntable: {tableid} \nupdated {row} row on steamid {steamid} to {newvalue}", ephemeral=True)
+
+    updated = dbconnector.updatedb(tableid, steamid, row, newvalue, dbconnector.host,
+                                   dbconnector.database, dbconnector.user, dbconnector.password)
+
+    embed = discord.Embed(title=f"{dbconnector.database} in {tableid}",
+                          description="", colour=discord.Colour.purple())
+    embed.set_author(name="discord.sql")
+    embed.set_thumbnail(
+        url="https://cdn.discordapp.com/attachments/981184461322465290/1098046630411911178/discordsqlbanner.png")
+    embed.set_footer(text=api.get_latest_version())
+
+    value = updated[row]
+    value_str = ', '.join(str(v) for v in value)
+
+    embed.add_field(name=f"{row}", value=f"{value_str} to {newvalue}")
+    embed.add_field(name=f"User", value=f"{steamid}")
+
+    await interaction.response.send_message(embed=embed)
+    # await interaction.response.send_message(f"On database {dbconnector.database} \ntable: {tableid} \nupdated {row} row on steamid {steamid} to {newvalue}", ephemeral=True)
 
 
 @tree.command(guild=discord.Object(id=id_do_servidor), name='rows', description='Campos no banco de dados')
 async def rows(interaction: discord.Interaction, tableid: str):
-    rows = dbconnector.list_rows(tableid, dbconnector.cfg_read('host'), dbconnector.cfg_read(
-        'database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password'))
+    rows = dbconnector.list_rows(
+        tableid, dbconnector.host, dbconnector.database, dbconnector.user, dbconnector.password)
 
     embed = discord.Embed(title=f"{tableid}",
                           description="", colour=discord.Colour.purple())
@@ -77,8 +150,8 @@ async def rows(interaction: discord.Interaction, tableid: str):
 
 @tree.command(guild=discord.Object(id=id_do_servidor), name='row', description='Campos no banco de dados')
 async def row(interaction: discord.Interaction, tableid: str, steamid: str):
-    row = dbconnector.list_unique_rows(tableid, steamid, dbconnector.cfg_read('host'), dbconnector.cfg_read(
-        'database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password'))
+    row = dbconnector.list_unique_rows(
+        tableid, steamid, dbconnector.host, dbconnector.database, dbconnector.user, dbconnector.password)
 
     embed = discord.Embed(title=f"{tableid}",
                           description="", colour=discord.Colour.purple())
@@ -99,8 +172,9 @@ async def row(interaction: discord.Interaction, tableid: str, steamid: str):
 
 @tree.command(guild=discord.Object(id=id_do_servidor), name='sqlcommand', description='Campos no banco de dados')
 async def sqlcommand(interaction: discord.Interaction, command: str):
-    row = dbconnector.run_command(command, dbconnector.cfg_read('host'), dbconnector.cfg_read(
-        'database'), dbconnector.cfg_read('user'), dbconnector.cfg_read('password'))
+
+    row = dbconnector.run_command(
+        command, dbconnector.host, dbconnector.database, dbconnector.user, dbconnector.password)
 
     embed = discord.Embed(title=f"{row[0]}",
                           description="", colour=discord.Colour.purple())
@@ -110,6 +184,22 @@ async def sqlcommand(interaction: discord.Interaction, command: str):
     embed.set_footer(text=api.get_latest_version())
 
     embed.add_field(name=f"Command return:", value=f"{row[1]}")
+
+    await interaction.response.send_message(embed=embed)
+
+
+@tree.command(guild=discord.Object(id=id_do_servidor), name='database', description='Campos no banco de dados')
+async def database(interaction: discord.Interaction):
+
+    embed = discord.Embed(title=f"using {dbconnector.database} database ",
+                          description="", colour=discord.Colour.purple())
+    embed.set_author(name="discord.sql")
+    embed.set_thumbnail(
+        url="https://cdn.discordapp.com/attachments/981184461322465290/1098046630411911178/discordsqlbanner.png")
+    embed.set_footer(text=api.get_latest_version())
+
+    embed.add_field(
+        name=f"", value=f"to use another database, please use /setdatabase")
 
     await interaction.response.send_message(embed=embed)
 
