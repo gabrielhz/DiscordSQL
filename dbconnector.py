@@ -59,7 +59,8 @@ def connectdb(host, database, user, password):
         connection = mysql.connector.connect(host=host,
                                              database=database,
                                              user=user,
-                                             password=password)
+                                             password=password
+                                             )
 
         if connection.is_connected():
             db_Info = connection.get_server_info()
@@ -168,12 +169,12 @@ def list_columns(tableid, host, database, user, password):
     return output
 
 
-def updatedb(tableid, playerid, row, newvalue, host, database, user, password):
+def updatedb(tableid, sortby, sortvalue, row, newvalue, host, database, user, password):
     connectdb(host, database, user, password)
     cursor = connection.cursor(dictionary=True)
 
-    sql_select_query = "select * from " + \
-        str(tableid) + " where steam = '{0}'".format(playerid)
+    sql_select_query = f"select * from {tableid} where {sortby} = '{sortvalue}'"
+
     cursor.execute(sql_select_query)
     records = cursor.fetchall()
     output = defaultdict(list)
@@ -182,12 +183,11 @@ def updatedb(tableid, playerid, row, newvalue, host, database, user, password):
             output[key].append(value)
     print(output)
 
-    sql_update_query = "update " + \
-        str(tableid) + " set " + str(row) + " = " + str(newvalue) + \
-        " where steam = '{0}'".format(playerid)
+    sql_update_query = f"update {tableid} set {row} = {newvalue} where {sortby} = '{sortvalue}'"
+
     cursor.execute(sql_update_query)
     connection.commit()
 
-    cursor.execute(sql_select_query)
+    # cursor.execute(sql_select_query)
     disconnectdb()
     return output
