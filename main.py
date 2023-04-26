@@ -29,7 +29,7 @@ tree = app_commands.CommandTree(aclient)
 async def setdatabase(interaction: discord.Interaction, host: str, database: str, user: str, password: str):
 
     storing = dbconnector.storedb(
-        f"{host}", f"{database}", f"{user}", f"")
+        f"{host}", f"{database}", f"{user}", f"{password}")
 
     if storing[0] == True:
 
@@ -104,9 +104,9 @@ async def tables(interaction: discord.Interaction, tableid: str,):
 
 
 @tree.command(guild=discord.Object(id=id_do_servidor), name='updatedatabase', description='Modifica os dados da tabela selecionada')
-async def updatedatabase(interaction: discord.Interaction, tableid: str, steamid: str, row: str, newvalue: str):
+async def updatedatabase(interaction: discord.Interaction, tableid: str, sortby: str, sortvalue: str, row: str, newvalue: str):
 
-    updated = dbconnector.updatedb(tableid, steamid, row, newvalue, dbconnector.host,
+    updated = dbconnector.updatedb(tableid, sortby, sortvalue, row, newvalue, dbconnector.host,
                                    dbconnector.database, dbconnector.user, dbconnector.password)
 
     embed = discord.Embed(title=f"{dbconnector.database} in {tableid}",
@@ -120,7 +120,7 @@ async def updatedatabase(interaction: discord.Interaction, tableid: str, steamid
     value_str = ', '.join(str(v) for v in value)
 
     embed.add_field(name=f"{row}", value=f"{value_str} to {newvalue}")
-    embed.add_field(name=f"User", value=f"{steamid}")
+    embed.add_field(name=f"User", value=f"{sortvalue}")
 
     await interaction.response.send_message(embed=embed)
     # await interaction.response.send_message(f"On database {dbconnector.database} \ntable: {tableid} \nupdated {row} row on steamid {steamid} to {newvalue}", ephemeral=True)
